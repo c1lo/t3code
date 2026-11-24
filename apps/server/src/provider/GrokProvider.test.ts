@@ -366,7 +366,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("checkGrokProvide
         type: "cached_token",
         label: "Grok account",
       });
-      expect(snapshot.models.map((model) => model.slug)).toEqual(["grok-4.6", "grok-mock-alt"]);
+      expect(snapshot.models.map((model) => model.slug)).toEqual([
+        "grok-4.6",
+        "grok-mock-alt",
+        "grok-build",
+      ]);
+      expect(snapshot.models.at(-1)?.capabilities).toEqual(snapshot.models[0]?.capabilities);
       expect(snapshot.models[0]?.isDefault).toBe(true);
       expect(
         snapshot.models[0]?.capabilities?.optionDescriptors?.map((option) => option.id) ?? [],
@@ -417,6 +422,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("checkGrokProvide
       expect(snapshot.models.map((model) => [model.slug, model.isDefault ?? false])).toEqual([
         ["grok-4.6", true],
         ["grok-4.5", false],
+        ["grok-build", false],
       ]);
       expect(snapshot.message).toContain("ACP initialize failed");
       expect(snapshot.slashCommands.map((command) => command.name)).toEqual(["compact"]);

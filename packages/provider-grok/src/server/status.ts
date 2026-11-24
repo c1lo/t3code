@@ -66,14 +66,12 @@ const VERSION_PROBE_TIMEOUT_MS = 10_000;
 const GROK_ACP_INITIALIZE_TIMEOUT_MS = 20_000;
 const GROK_API_KEY_ENV = "XAI_API_KEY";
 
-const GROK_BUILT_IN_MODELS: ReadonlyArray<ServerProviderModel> = [
-  {
-    slug: GROK_DEFAULT_MODEL_SLUG,
-    name: "Grok Build",
-    isCustom: false,
-    capabilities: EMPTY_CAPABILITIES,
-  },
-];
+const GROK_SESSION_MODEL: ServerProviderModel = {
+  slug: GROK_DEFAULT_MODEL_SLUG,
+  name: "Grok Build",
+  isCustom: false,
+  capabilities: EMPTY_CAPABILITIES,
+};
 
 export const buildInitialGrokProviderSnapshot = Effect.fn(
   "GrokProviderStatus.buildInitialGrokProviderSnapshot",
@@ -114,9 +112,17 @@ export const buildInitialGrokProviderSnapshot = Effect.fn(
 
 function grokModelsFromSettings(
   customModels: ReadonlyArray<CustomModelSetting> | undefined,
-  builtInModels: ReadonlyArray<ServerProviderModel> = GROK_BUILT_IN_MODELS,
+  builtInModels: ReadonlyArray<ServerProviderModel> = [GROK_SESSION_MODEL],
 ): ReadonlyArray<ServerProviderModel> {
-  return providerModelsFromSettings(builtInModels, customModels ?? [], EMPTY_CAPABILITIES);
+  const models = providerModelsFromSettings(builtInModels, customModels ?? [], EMPTY_CAPABILITIES);
+  if (models.some((model) => model.slug === GROK_DEFAULT_MODEL_SLUG)) return models;
+
+  // The adapter accepts grok-build to follow the session model even after ACP lists concrete IDs.
+  const sessionDefault = builtInModels.find((model) => model.isDefault);
+  return [
+    ...models,
+    { ...GROK_SESSION_MODEL, capabilities: sessionDefault?.capabilities ?? EMPTY_CAPABILITIES },
+  ];
 }
 
 function nonEmptyString(value: unknown): string | undefined {
